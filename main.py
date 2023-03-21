@@ -180,8 +180,8 @@ def get_lists_product(input_lists):
 
 # в конце цыкла перебора аналогов(lists_dict_analogs) просто плюсуем list_original_product + list_analog, а добовление в write_list уже
 # делаем поле выполнения цикла
-    count = len(input_lists)
-    for list_product in input_lists:
+    count = len(input_lists[:20])
+    for list_product in input_lists[:20]:
         print(list_product)#########################
 
         print(count)################################
@@ -218,7 +218,7 @@ def get_lists_product(input_lists):
                 for product_list in emex_list_original_product:
 
                     wrrite_list_product = list_original_product + product_list
-
+                    write_list.append(wrrite_list_product)
 
                     for dict_analog in lists_dict_analogs:
                         if counter_analog != 5:
@@ -236,11 +236,10 @@ def get_lists_product(input_lists):
                             if check_by_criterion:
                                 counter_analog += 1
 
-                                wrrite_list_product += list_analog + [check_by_criterion]
+                                write_list.append(wrrite_list_product + list_analog + [check_by_criterion])
                         else:
                             counter_analog = 0
                             break
-                    write_list.append(wrrite_list_product)
     return write_list
 
 
