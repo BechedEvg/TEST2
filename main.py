@@ -54,6 +54,7 @@ class Exel_RW:
         else:
             worksheet = workbook[sheet_name]
         for list_values in write_lists:
+            print(list_values)
             worksheet.append(list_values)
         workbook.save(file_name)
         workbook.close()
@@ -103,6 +104,7 @@ def get_lists_original_product(dict_product, original):
                             str(dict_analog["rating"]),
                             str(dict_analog["quantity"]),
                             str(dict_analog["delivery"]),
+                            f"https://emex.ru/products/{dict_analog['vendor_cod']}/{dict_analog['make']}/29241",
                            ]
             if int(list_product[3]) < 31 and list_product != original:
                 lists_original_products.append(list_product)
@@ -130,7 +132,7 @@ def get_html(url):
 def get_emex_original_list_product(vendor_cod):
     list_product = []
     url_part1 = "https://emex.ru/products/"
-    url_part2 = "/Mitsubishi/29241"
+    url_part2 = "/ /29241"
     url = url_part1 + vendor_cod + url_part2
     html_product = get_html(url).text
     parser = BeautifulSoup(html_product, "lxml")
@@ -150,6 +152,7 @@ def get_emex_original_list_product(vendor_cod):
         list_product.append(rating)
         list_product.append(quantity)
         list_product.append(delivery)
+        list_product.append(url)
     else:
         return False
     return [list_product]
@@ -214,12 +217,18 @@ def get_lists_product(input_lists):
 
 
                 counter_analog = 0
+                counter_original = 0
 
                 for product_list in emex_list_original_product:
 
-                    wrrite_list_product = list_original_product + product_list
-                    write_list.append(wrrite_list_product)
+                    counter_original += 1
 
+
+                    wrrite_list_product = list_original_product + ['', ''] + [counter_original] + [''] +\
+                                          [product_list[0]] + [''] + product_list[1:4] + [''] + [product_list[4]]
+
+
+                    flag_write_original = True
                     for dict_analog in lists_dict_analogs:
                         if counter_analog != 5:
                             if dict_analog["quantity"] == 1000:
@@ -234,12 +243,19 @@ def get_lists_product(input_lists):
                                            ]
                             check_by_criterion = Analysis(list_analog, product_list).price_check()
                             if check_by_criterion:
+
+                                flag_write_original = False
                                 counter_analog += 1
 
-                                write_list.append(wrrite_list_product + list_analog + [check_by_criterion])
+                                write_list.append(wrrite_list_product[:7] + list_analog[:3][::-1] + [counter_original] +
+                                                  [counter_analog] + [check_by_criterion] + [wrrite_list_product[13]] + \
+                                [list_analog[2]] + list_analog[4:] + [check_by_criterion] + [list_analog[3]])
+
                         else:
                             counter_analog = 0
                             break
+                    if flag_write_original:
+                        write_list.append(wrrite_list_product)
     return write_list
 
 
@@ -251,50 +267,18 @@ def write_list_data(lists_product):
                      "Ценовой сегмент",
                      "Наименование запчасти",
                      "Артикул (оригинал)",
-                     "Цена EMEX на артикул оригинала",
+                     "Артикул Аналога",
+                     "Бренд Аналога",
+                     "№ предложения (по оригиналу)",
+                     "№ предложения по аналогу",
+                     "Цена EMEX на артикул оригинала ( по номеру)",
+                     "Цена EMEX на артикул аналога ( по номеру)",
                      "Рейтинг",
                      "Наличие в шт.",
                      "Количество дней доставки",
-                     "Бренд Аналога  1",
-                     "Артикул Аналога 1",
-                     "Цена Аналога 1",
+                     "% разница стоимости оригинала (РРЦ)",
                      "Источник цен от emex (ссылка)",
-                     "Рейтинг",
-                     "Наличие в шт.",
-                     "Количество дней доставки",
-                     "% разница стоимости",
-                     "Бренд Аналога  2",
-                     "Артикул Аналога 2",
-                     "Цена Аналога 2",
-                     "Источник цен от emex (ссылка)",
-                     "Рейтинг",
-                     "Наличие в шт.",
-                     "Количество дней доставки",
-                     "% разница стоимости",
-                     "Бренд Аналога  3",
-                     "Артикул Аналога 3",
-                     "Цена Аналога 3",
-                     "Источник цен от emex (ссылка)",
-                     "Рейтинг",
-                     "Наличие в шт.",
-                     "Количество дней доставки",
-                     "% разница стоимости",
-                     "Бренд Аналога  4",
-                     "Артикул Аналога 4",
-                     "Цена Аналога 4",
-                     "Источник цен от emex (ссылка)",
-                     "Рейтинг",
-                     "Наличие в шт.",
-                     "Количество дней доставки",
-                     "% разница стоимости",
-                     "Бренд Аналога  5",
-                     "Артикул Аналога 5",
-                     "Цена Аналога 5",
-                     "Источник цен от emex (ссылка)",
-                     "Рейтинг",
-                     "Наличие в шт.",
-                     "Количество дней доставки",
-                     "% разница стоимости",]]
+                     ]]
     return column_names + lists_product
 
 
@@ -317,6 +301,8 @@ def main():
 if __name__ == '__main__':
     main()
     pass
+
+
 
 
 #vendor_cod = str(1717674)
