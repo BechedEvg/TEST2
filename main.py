@@ -54,7 +54,6 @@ class Exel_RW:
         else:
             worksheet = workbook[sheet_name]
         for list_values in write_lists:
-            print(list_values)
             worksheet.append(list_values)
         workbook.save(file_name)
         workbook.close()
@@ -247,8 +246,8 @@ def get_lists_product(input_lists):
                                 flag_write_original = False
                                 counter_analog += 1
 
-                                write_list.append(wrrite_list_product[:7] + list_analog[:3][::-1] + [counter_original] +
-                                                  [counter_analog] + [check_by_criterion] + [wrrite_list_product[13]] + \
+                                write_list.append(wrrite_list_product[:7] + list_analog[:2][::-1] + [counter_original] +
+                                                  [counter_analog] + [wrrite_list_product[11]] + \
                                 [list_analog[2]] + list_analog[4:] + [check_by_criterion] + [list_analog[3]])
 
                         else:
