@@ -128,33 +128,43 @@ def get_html(url):
     return html
 
 
-def get_emex_original_list_product(vendor_cod):
-    list_product = []
-    url_part1 = "https://emex.ru/products/"
-    url_part2 = "/ /29241"
-    url = url_part1 + vendor_cod + url_part2
-    html_product = get_html(url).text
-    parser = BeautifulSoup(html_product, "lxml")
-
-    availability = parser.find(class_="sc-b0f3936c-1 kHZHVQ")
-
-    if availability != None:
-        regex_num = re.compile('\d+')
-        rating = parser.find(class_="sc-b0f3936c-1 kHZHVQ").text
-        try:
-            quantity = "".join(regex_num.findall(parser.find(class_="sc-d67ce909-11 sc-d67ce909-13 fuNkfc csqgZG").text))
-        except:
-            quantity = "под заказ"
-        delivery = "".join(regex_num.findall(parser.find(class_="sc-d67ce909-11 sc-d67ce909-14 fuNkfc jtgcED").text))
-        price = "".join(regex_num.findall(parser.find(class_="sc-d67ce909-11 sc-d67ce909-15 fuNkfc gXBVKh").text))
-        list_product.append(price)
-        list_product.append(rating)
-        list_product.append(quantity)
-        list_product.append(delivery)
-        list_product.append(url)
-    else:
+def get_url_product_emex(vendor_cod):
+    dict_product = get_emex_dict_products(vendor_cod)
+    try:
+        return dict_product["makes"]["list"][0]["url"]
+    except:
         return False
-    return [list_product]
+
+
+def get_emex_original_list_product(vendor_cod):
+
+    list_product = []
+    url = get_url_product_emex(vendor_cod)
+    if url:
+        url = "https://emex.ru/products/" + url
+        html_product = get_html(url).text
+        parser = BeautifulSoup(html_product, "lxml")
+
+        availability = parser.find(class_="sc-b0f3936c-1 kHZHVQ")
+
+        if availability != None:
+            regex_num = re.compile('\d+')
+            rating = parser.find(class_="sc-b0f3936c-1 kHZHVQ").text
+            try:
+                quantity = "".join(regex_num.findall(parser.find(class_="sc-d67ce909-11 sc-d67ce909-13 fuNkfc csqgZG").text))
+            except:
+                quantity = "под заказ"
+            delivery = "".join(regex_num.findall(parser.find(class_="sc-d67ce909-11 sc-d67ce909-14 fuNkfc jtgcED").text))
+            price = "".join(regex_num.findall(parser.find(class_="sc-d67ce909-11 sc-d67ce909-15 fuNkfc gXBVKh").text))
+            list_product.append(price)
+            list_product.append(rating)
+            list_product.append(quantity)
+            list_product.append(delivery)
+            list_product.append(url)
+        else:
+            return False
+        return [list_product]
+    return False
 
 
 def get_lists_dict_originals_or_analogs(dict_product, list_name):
@@ -180,40 +190,34 @@ def get_lists_product(input_lists):
     write_list = []
 
 
-# в конце цыкла перебора аналогов(lists_dict_analogs) просто плюсуем list_original_product + list_analog, а добовление в write_list уже
-# делаем поле выполнения цикла
-    count = len(input_lists[:20])
-    for list_product in input_lists[:20]:
-        print(list_product)#########################
+    count = len(input_lists)
+    for list_product in input_lists:
+        print(list_product)  #########################
 
-        print(count)################################
-        count -= 1##############################################
-
+        print(count)  ################################
+        count -= 1  ##############################################
 
         list_original_product = list_product
 
         vendor_cod = str(list_product[-1])
 
-
-
         if vendor_cod not in ["nan", "-"]:
 
             emex_list_original_product = get_emex_original_list_product(vendor_cod)
 
-            if emex_list_original_product:         # если продукт найден
-                #list_original_product += emex_list_original_product
+            if emex_list_original_product:  # если продукт найден
+                # list_original_product += emex_list_original_product
 
-                print(vendor_cod)###################################################
-
+                print(vendor_cod)  ###################################################
 
                 dict_product = get_emex_dict_products(vendor_cod)
                 lists_dict_originals = get_lists_dict_originals_or_analogs(dict_product, "originals")
-                lists_original_products_emex = get_lists_original_product(lists_dict_originals, emex_list_original_product)
+                lists_original_products_emex = get_lists_original_product(lists_dict_originals,
+                                                                          emex_list_original_product)
                 lists_dict_analogs = get_lists_dict_originals_or_analogs(dict_product, "analogs")
 
-                emex_list_original_product += duplicate_list_exception(emex_list_original_product[0], lists_original_products_emex)
-
-
+                emex_list_original_product += duplicate_list_exception(emex_list_original_product[0],
+                                                                       lists_original_products_emex)
 
                 counter_analog = 0
                 counter_original = 0
@@ -223,9 +227,8 @@ def get_lists_product(input_lists):
                     counter_original += 1
 
 
-                    wrrite_list_product = list_original_product + ['', ''] + [counter_original] + [''] +\
+                    wrrite_list_product = list_original_product + ['', ''] + [counter_original] + [''] + \
                                           [product_list[0]] + [''] + product_list[1:4] + [''] + [product_list[4]]
-
 
                     flag_write_original = True
                     for dict_analog in lists_dict_analogs:
@@ -244,19 +247,21 @@ def get_lists_product(input_lists):
                             check_by_criterion = Analysis(list_analog, product_list).price_check()
 
                             if check_by_criterion:
-
                                 flag_write_original = False
                                 counter_analog += 1
 
                                 write_list.append(wrrite_list_product[:7] + list_analog[:2][::-1] + [counter_original] +
                                                   [counter_analog] + [wrrite_list_product[11]] + \
-                                [list_analog[2]] + list_analog[4:] + [check_by_criterion] + [list_analog[3]])
+                                                  [list_analog[2]] + list_analog[4:] + [check_by_criterion] + [
+                                                      list_analog[3]])
 
                         else:
                             counter_analog = 0
                             break
                     if flag_write_original:
                         write_list.append(wrrite_list_product)
+            else:
+                write_list.append(list_product + ["", "", "", "", 0])
     return write_list
 
 
@@ -302,22 +307,3 @@ def main():
 if __name__ == '__main__':
     main()
     pass
-
-
-
-
-#vendor_cod = str(1717674)
-#dict_product = get_emex_dict_products(vendor_cod)
-#lists_dict_originals = get_lists_dict_originals_or_analogs(dict_product, "originals")
-#rez = get_lists_original_product(lists_dict_originals)
-#print(rez)
-
-#rez = get_emex_original_list_product("31424809")1358901gg
-#rezB = ((111904 - 124186) / 124186) * 100 #если цена аналога больше
-#rezM = ((5755 - 4041) / 4041) * 100 #если цена аналога меньше
-
-#print(rezB)
-#input_list = Exel_RW.read_exel("input.xlsx")
-#print(input_list[2999:3000])
-#current_datetime = datetime.now()
-#print(current_datetime)
